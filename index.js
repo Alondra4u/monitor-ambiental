@@ -187,8 +187,10 @@ app.use("/api/alarmas", alarmasRouter);
 // ==============================
 // SERVIDOR
 // ==============================
-const PORT = 3000;
+// process.env.PORT toma el puerto automático de Render; si estás en local, usa el 3000
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`API escuchando en http://0.0.0.0:${PORT}`);
+  console.log(`API corriendo exitosamente en el puerto ${PORT}`);
 });
 
