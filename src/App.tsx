@@ -62,18 +62,13 @@ function ComparativaPage() {
   );
 }
 
-type HistorialPageProps = {
-  registros: Registro[];
-};
-
-function HistorialPage({ registros }: HistorialPageProps) {
+function HistorialPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
-      <HistoryTable registros={registros} />
+      <HistoryTable />
     </div>
   );
 }
-
 function AlarmasPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
@@ -152,10 +147,10 @@ function App() {
 
       <Routes>
         <Route path="/" element={<DashboardPage registros={registros} />} />
-        <Route
-          path="/historial"
-          element={<HistorialPage registros={registros} />}
-        />
+       <Route
+  path="/historial"
+  element={<HistorialPage />}
+/>
         <Route path="/comparativa" element={<ComparativaPage />} />
         <Route path="/alarmas" element={<AlarmasPage />} />
       </Routes>

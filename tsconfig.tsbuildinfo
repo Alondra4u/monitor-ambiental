@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/config.ts","./src/main.tsx","./src/components/activealarmswidget.tsx","./src/components/alarmspanel.tsx","./src/components/comparativa.tsx","./src/components/dashboardhistorytable.tsx","./src/components/historytable.tsx","./src/components/livechart.tsx","./src/components/navbar.tsx","./src/components/realtimevalues.tsx"],"version":"5.9.3"}
