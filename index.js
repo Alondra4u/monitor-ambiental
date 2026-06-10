@@ -9,9 +9,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-// ==============================
-// CONEXIÓN A LA BD
-// ==============================
+
 
 
 // =====================================================
@@ -113,6 +111,78 @@ app.get("/api/mediciones", async (req, res) => {
   } catch (error) {
     console.error("Error obteniendo mediciones:", error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Crear nueva medición (endpoint para que los dispositivos envíen datos)
+
+app.post("/api/mediciones", async (req, res) => {
+  try {
+    const {
+      id_dispositivo,
+      temperatura,
+      humedad,
+      co2,
+      co,
+      voc,
+      nox
+    } = req.body;
+
+    const fecha = new Date();
+
+    const fecha_medicion =
+      fecha.getFullYear() +
+      "-" +
+      String(fecha.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(fecha.getDate()).padStart(2, "0");
+
+    const hora_medicion =
+      String(fecha.getHours()).padStart(2, "0") +
+      ":" +
+      String(fecha.getMinutes()).padStart(2, "0") +
+      ":" +
+      String(fecha.getSeconds()).padStart(2, "0");
+
+    const [result] = await pool.query(
+      `
+      INSERT INTO mediciones (
+        id_dispositivo,
+        fecha_medicion,
+        hora_medicion,
+        temperatura,
+        humedad,
+        co2_ppm,
+        co_ppm,
+        voc_ppb,
+        nox_ppb
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        id_dispositivo,
+        fecha_medicion,
+        hora_medicion,
+        temperatura,
+        humedad,
+        co2,
+        co,
+        voc,
+        nox
+      ]
+    );
+
+    res.status(201).json({
+      ok: true,
+      id_medicion: result.insertId
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
