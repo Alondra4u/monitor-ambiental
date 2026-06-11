@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+#Sistema de Monitoreo Ambiental
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Proyecto desarrollado durante mi servicio social para el departamento de posgrado del Tecnológico de la Laguna.
 
-Currently, two official plugins are available:
+#Descripción:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Desarrollo de una aplicación web para la visualización de datos ambientales obtenidos mediante sensores en tiempo real, permitiendo el acceso remoto a la información para su consulta y monitoreo.
 
-## React Compiler
+#Tecnologías utilizadas:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+React
+Node.js
+Express
+MySQL (Aiven)
+Render
+GitHub
 
-## Expanding the ESLint configuration
+#Responsabilidades:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Desarrollo del frontend para la visualización de datos ambientales.
+Desarrollo del backend y APIs para la consulta y procesamiento de información.
+Diseño e integración de la base de datos para el almacenamiento centralizado de los datos capturados por los sensores.
+Migración del almacenamiento local de datos hacia una base de datos accesible de forma remota.
+Despliegue de la base de datos en Aiven.
+Despliegue del frontend y backend en Render.
+Configuración y gestión del proyecto mediante GitHub.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+#Problema resuelto:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Anteriormente, los datos generados por los sensores se almacenaban localmente en una memoria, lo que dificultaba su consulta, respaldo y acceso remoto.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+La solución desarrollada permitió almacenar la información en una base de datos centralizada, facilitando la consulta histórica de los datos, su visualización mediante una aplicación web y el acceso remoto a la información en tiempo real.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#Resultados:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Visualización de datos ambientales en tiempo real.
+Acceso remoto a la información desde cualquier navegador.
+Integración completa entre frontend, backend y base de datos.
+Implementación utilizando servicios cloud gratuitos.
