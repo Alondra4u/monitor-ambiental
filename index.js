@@ -128,7 +128,14 @@ app.post("/api/mediciones", async (req, res) => {
       nox
     } = req.body;
 
-    const fecha = new Date();
+   const fecha_medicion = new Date().toLocaleDateString("en-CA", {
+  timeZone: "America/Monterrey"
+});
+
+const hora_medicion = new Date().toLocaleTimeString("en-GB", {
+  timeZone: "America/Monterrey",
+  hour12: false
+});
 
     const fecha_medicion =
       fecha.getFullYear() +
