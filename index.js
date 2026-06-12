@@ -114,6 +114,9 @@ app.get("/api/mediciones", async (req, res) => {
   }
 });
 
+
+// Crear nueva medición (endpoint para que los dispositivos envíen datos)
+
 // Crear nueva medición (endpoint para que los dispositivos envíen datos)
 
 app.post("/api/mediciones", async (req, res) => {
@@ -128,28 +131,22 @@ app.post("/api/mediciones", async (req, res) => {
       nox
     } = req.body;
 
-   const fecha_medicion = new Date().toLocaleDateString("en-CA", {
-  timeZone: "America/Monterrey"
-});
+    // Obtener fecha y hora de Monterrey
+    const ahora = new Date();
 
-const hora_medicion = new Date().toLocaleTimeString("en-GB", {
-  timeZone: "America/Monterrey",
-  hour12: false
-});
+    const fecha_medicion = ahora.toLocaleDateString("en-CA", {
+      timeZone: "America/Monterrey"
+    });
 
-    const fecha_medicion =
-      fecha.getFullYear() +
-      "-" +
-      String(fecha.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(fecha.getDate()).padStart(2, "0");
+    const hora_medicion = ahora.toLocaleTimeString("en-GB", {
+      timeZone: "America/Monterrey",
+      hour12: false
+    });
 
-    const hora_medicion =
-      String(fecha.getHours()).padStart(2, "0") +
-      ":" +
-      String(fecha.getMinutes()).padStart(2, "0") +
-      ":" +
-      String(fecha.getSeconds()).padStart(2, "0");
+    console.log("================================");
+    console.log("Fecha generada:", fecha_medicion);
+    console.log("Hora generada :", hora_medicion);
+    console.log("================================");
 
     const [result] = await pool.query(
       `
@@ -183,8 +180,9 @@ const hora_medicion = new Date().toLocaleTimeString("en-GB", {
       ok: true,
       id_medicion: result.insertId
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Error insertando medición:", error);
 
     res.status(500).json({
       ok: false,
@@ -192,7 +190,6 @@ const hora_medicion = new Date().toLocaleTimeString("en-GB", {
     });
   }
 });
-
 
 // RUTA: ÚLTIMA HORA
 app.get("/api/mediciones/ultimahora", async (req, res) => {
