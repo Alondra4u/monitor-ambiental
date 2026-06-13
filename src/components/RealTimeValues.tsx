@@ -16,10 +16,14 @@ export default function RealTimeValues({ registros }: RealTimeValuesProps) {
   );
 
   const formatearFecha = (valor: string) => {
-    const d = new Date(valor);
-    if (isNaN(d.getTime())) return valor; // por si ya viene como '2025-03-07'
-    return d.toLocaleDateString("es-MX"); // 07/03/2025
-  };
+  if (!valor) return "";
+
+  const soloFecha = valor.split("T")[0];
+
+  const [anio, mes, dia] = soloFecha.split("-");
+
+  return `${dia}/${mes}/${anio}`;
+};
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-md">

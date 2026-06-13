@@ -26,10 +26,12 @@ const HistoryTable: React.FC = () => {
   const [toDate, setToDate] = useState("");
   const [station, setStation] = useState<"todas" | "Rural" | "Urbana">("todas");
 
- const formatearFecha = (valor: string) => {
+const formatearFecha = (valor: string) => {
   if (!valor) return "";
 
-  const [anio, mes, dia] = valor.split("-");
+  const soloFecha = valor.split("T")[0];
+
+  const [anio, mes, dia] = soloFecha.split("-");
 
   return `${dia}/${mes}/${anio}`;
 };

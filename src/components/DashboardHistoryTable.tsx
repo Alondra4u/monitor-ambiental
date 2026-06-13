@@ -9,10 +9,14 @@ const DashboardHistoryTable: React.FC<DashboardHistoryTableProps> = ({
   registros = [], // 👈 si no mandan nada, usa []
 }) => {
   const formatearFecha = (valor: string) => {
-    const d = new Date(valor);
-    if (isNaN(d.getTime())) return valor;
-    return d.toLocaleDateString("es-MX"); // 07/03/2025
-  };
+  if (!valor) return "";
+
+  const soloFecha = valor.split("T")[0];
+
+  const [anio, mes, dia] = soloFecha.split("-");
+
+  return `${dia}/${mes}/${anio}`;
+};
 
   const formatearEstacion = (valor: string) => {
     if (!valor) return "";
