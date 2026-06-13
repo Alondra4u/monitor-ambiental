@@ -1,153 +1,165 @@
 import React, { useMemo } from "react";
 import type { Registro } from "../App";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  CartesianGrid,
+AreaChart,
+Area,
+XAxis,
+YAxis,
+Tooltip,
+Legend,
+ResponsiveContainer,
+CartesianGrid,
 } from "recharts";
 
 type LiveChartProps = {
-  registros: Registro[];
+registros: Registro[];
 };
 
 const LiveChart: React.FC<LiveChartProps> = ({ registros }) => {
-  // Ahora: usamos simplemente los ÚLTIMOS N datos reales (sin promedios por hora)
-  const chartData = useMemo(() => {
-    if (!registros || registros.length === 0) return [];
+const chartData = useMemo(() => {
+if (!registros?.length) return [];
 
-    // 1) Ordenamos por fecha+hora ASC
-    const ordenados = [...registros].sort((a, b) => {
-      const da = new Date(`${a.fecha}T${a.hora}`);
-      const db = new Date(`${b.fecha}T${b.hora}`);
-      return da.getTime() - db.getTime();
+type Acumulado = {
+  fecha: string;
+  ruralSuma: number;
+  ruralCount: number;
+  urbanaSuma: number;
+  urbanaCount: number;
+};
+
+const mapa = new Map<string, Acumulado>();
+
+registros.forEach((r) => {
+  if (!r.fecha) return;
+
+  const fecha = r.fecha.split("T")[0];
+
+  if (!mapa.has(fecha)) {
+    mapa.set(fecha, {
+      fecha,
+      ruralSuma: 0,
+      ruralCount: 0,
+      urbanaSuma: 0,
+      urbanaCount: 0,
     });
+  }
 
-    // 2) Nos quedamos solo con los ÚLTIMOS N registros (ej. 24)
-    const N = 24;
-    const ultimos = ordenados.slice(-N);
+  const dia = mapa.get(fecha)!;
 
-    // 3) Construimos puntos por etiqueta de tiempo HH:MM
-    type Punto = {
-      time: string;
-      rural: number | null;
-      urbana: number | null;
-    };
+  const estacion = r.estacion.toLowerCase();
 
-    const mapa = new Map<string, Punto>();
+  if (estacion.includes("rural")) {
+    dia.ruralSuma += Number(r.co2);
+    dia.ruralCount++;
+  }
 
-    for (const r of ultimos) {
-      const horaStr = (r.hora || "").toString().slice(0, 5); // "HH:MM"
-      if (!horaStr) continue;
+  if (estacion.includes("urb")) {
+    dia.urbanaSuma += Number(r.co2);
+    dia.urbanaCount++;
+  }
+});
 
-      const existente =
-        mapa.get(horaStr) || {
-          time: horaStr,
-          rural: null,
-          urbana: null,
-        };
+return Array.from(mapa.values())
+  .sort((a, b) => a.fecha.localeCompare(b.fecha))
+  .slice(-5)
+  .map((d) => ({
+    time: d.fecha,
+    rural:
+      d.ruralCount > 0
+        ? Number((d.ruralSuma / d.ruralCount).toFixed(1))
+        : null,
+    urbana:
+      d.urbanaCount > 0
+        ? Number((d.urbanaSuma / d.urbanaCount).toFixed(1))
+        : null,
+  }));
 
-      const est = (r.estacion || "").toLowerCase();
 
-      if (est.includes("rural")) {
-        existente.rural = r.co2;
-      } else if (est.includes("urb")) {
-        existente.urbana = r.co2;
-      }
+}, [registros]);
 
-      mapa.set(horaStr, existente);
-    }
+return ( <div className="bg-white rounded-xl p-5 shadow-md h-72"> <h2 className="text-lg font-semibold mb-3">
+Promedio diario de CO₂ </h2>
 
-    // 4) Ordenamos por hora y devolvemos
-    return Array.from(mapa.values()).sort((a, b) =>
-      a.time.localeCompare(b.time)
-    );
-  }, [registros]);
 
-  return (
-    <div className="bg-white rounded-xl p-5 shadow-md h-72">
-      <h2 className="text-lg font-semibold mb-3">Gráfica en tiempo real</h2>
+  {chartData.length === 0 ? (
+    <p className="text-xs text-gray-500">
+      Aún no hay suficientes mediciones para mostrar la gráfica.
+    </p>
+  ) : (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart
+        data={chartData}
+        margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
 
-      {chartData.length === 0 ? (
-        <p className="text-xs text-gray-500">
-          Aún no hay suficientes mediciones para mostrar la gráfica.
-        </p>
-      ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
+        <defs>
+          <linearGradient id="colorRural" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f7a440" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="#f7a440" stopOpacity={0} />
+          </linearGradient>
 
-            {/* Gradientes para el relleno debajo de cada línea */}
-            <defs>
-              <linearGradient id="colorRural" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f7a440" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="#f7a440" stopOpacity={0} />
-              </linearGradient>
+          <linearGradient id="colorUrbana" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#1CB3D1" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="#1CB3D1" stopOpacity={0} />
+          </linearGradient>
+        </defs>
 
-              <linearGradient id="colorUrbana" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1CB3D1" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="#1CB3D1" stopOpacity={0} />
-              </linearGradient>
-            </defs>
+        <XAxis dataKey="time" tick={{ fontSize: 11 }} />
 
-            <XAxis dataKey="time" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} domain={[0, "auto"]} />
+        <YAxis
+          tick={{ fontSize: 11 }}
+          domain={[0, "auto"]}
+        />
 
-            <Tooltip
-              formatter={(value, name) => [
-                `${value} ppm`,
-                name === "rural" ? "Rural" : "Urbana",
-              ]}
-              labelFormatter={(label) => `Hora: ${label}`}
-            />
+        <Tooltip
+          formatter={(value, name) => [
+            `${value} ppm`,
+            name === "rural" ? "Rural" : "Urbana",
+          ]}
+          labelFormatter={(label) => `Fecha: ${label}`}
+        />
 
-            <Legend
-              verticalAlign="bottom"
-              align="center"
-              iconType="circle"
-              wrapperStyle={{ paddingTop: 8 }}
-              formatter={(value: string) => (
-                <span style={{ color: "#000000" }}>{value}</span>
-              )}
-            />
+        <Legend
+          verticalAlign="bottom"
+          align="center"
+          iconType="circle"
+          wrapperStyle={{ paddingTop: 8 }}
+          formatter={(value: string) => (
+            <span style={{ color: "#000000" }}>{value}</span>
+          )}
+        />
 
-            {/* Estación Rural (naranja) */}
-            <Area
-              type="monotone"
-              dataKey="rural"
-              name="Rural"
-              stroke="#f7a440"
-              strokeWidth={2}
-              fill="url(#colorRural)"
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-              connectNulls={false}
-            />
+        <Area
+          type="monotone"
+          dataKey="rural"
+          name="Rural"
+          stroke="#f7a440"
+          strokeWidth={2}
+          fill="url(#colorRural)"
+          dot={{ r: 3 }}
+          activeDot={{ r: 5 }}
+          connectNulls={false}
+        />
 
-            {/* Estación Urbana (azul) */}
-            <Area
-              type="monotone"
-              dataKey="urbana"
-              name="Urbana"
-              stroke="#1CB3D1"
-              strokeWidth={2}
-              fill="url(#colorUrbana)"
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-              connectNulls={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
+        <Area
+          type="monotone"
+          dataKey="urbana"
+          name="Urbana"
+          stroke="#1CB3D1"
+          strokeWidth={2}
+          fill="url(#colorUrbana)"
+          dot={{ r: 3 }}
+          activeDot={{ r: 5 }}
+          connectNulls={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  )}
+</div>
+
+
+);
 };
 
 export default LiveChart;
