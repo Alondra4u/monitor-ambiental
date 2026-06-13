@@ -194,6 +194,7 @@ const buildComparativeData = (
   });
 
   return Object.values(map).sort((a, b) => a.time.localeCompare(b.time));
+  console.log("MAPA FINAL", map);
 };
 
 
@@ -259,6 +260,8 @@ const Comparativa: React.FC = () => {
       [`Urbana ${currentParam.label} (${currentParam.unit})`]:
         p[currentParam.urbanaKey],
     }));
+
+    console.log(dataForRange);
 
     const sheet = XLSX.utils.json_to_sheet(rows);
     const book = XLSX.utils.book_new();

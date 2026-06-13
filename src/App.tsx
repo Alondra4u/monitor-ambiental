@@ -28,6 +28,7 @@ type DashboardPageProps = {
 };
 
 function DashboardPage({ registros }: DashboardPageProps) {
+    
   return (
     <div className="max-w-7xl mx-auto px-6 pt-10 pb-6 flex flex-col gap-4">
       {/* Fila 1: valores + gráfica */}
@@ -122,7 +123,10 @@ function App() {
       }
     };
 
-    fetchMediciones();
+    fetchMediciones();// carga inmediata al abrir la página
+    const intervalo = setInterval(fetchMediciones, 5000);// recarga cada 5 segundos
+
+  return () => clearInterval(intervalo);// limpia el intervalo al salir
   }, []);
 
   if (loading) {
