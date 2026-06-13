@@ -26,11 +26,13 @@ const HistoryTable: React.FC = () => {
   const [toDate, setToDate] = useState("");
   const [station, setStation] = useState<"todas" | "Rural" | "Urbana">("todas");
 
-  const formatearFecha = (valor: string) => {
-    const d = new Date(valor);
-    if (isNaN(d.getTime())) return valor; // por si ya viene '2025-03-07'
-    return d.toLocaleDateString("es-MX"); // 07/03/2025
-  };
+ const formatearFecha = (valor: string) => {
+  if (!valor) return "";
+
+  const [anio, mes, dia] = valor.split("-");
+
+  return `${dia}/${mes}/${anio}`;
+};
 
   const formatearEstacion = (valor: string) => {
     if (!valor) return "";
@@ -75,11 +77,9 @@ const HistoryTable: React.FC = () => {
     }
 
     // 2) Rango de fechas
-    const rowDate = new Date(row.fecha);
-    if (isNaN(rowDate.getTime())) {
-      // si por alguna razón la fecha viene mal, no filtramos por fecha
-      return true;
-    }
+   const rowDate = new Date(
+  row.fecha.split("-").join("/") + " 12:00:00"
+);
 
     if (fromDate) {
       const from = new Date(fromDate + "T00:00:00");
