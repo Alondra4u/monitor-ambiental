@@ -201,42 +201,48 @@ router.post("/", async (req, res) => {
     const esta_activa = enabled === undefined ? 1 : (enabled ? 1 : 0);
 
     // Upsert por UNIQUE (id_dispositivo, nombre_variable)
-    await pool.query(
-      `
-      INSERT INTO configuraciones_alarmas
-        (id_dispositivo, nombre_variable, valor_minimo, valor_maximo, nivel_severidad, esta_activa)
-      VALUES
-        (?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        valor_minimo = VALUES(valor_minimo),
-        valor_maximo = VALUES(valor_maximo),
-        nivel_severidad = VALUES(nivel_severidad),
-        esta_activa = VALUES(esta_activa)
-      `,
-      [deviceId, nombre_variable, valor_minimo, valor_maximo, sev, esta_activa]
-    );
+    const [result] = await pool.query(
+  `
+  INSERT INTO configuraciones_alarmas
+  (
+    id_dispositivo,
+    nombre_variable,
+    valor_minimo,
+    valor_maximo,
+    nivel_severidad,
+    esta_activa
+  )
+  VALUES (?, ?, ?, ?, ?, ?)
+  `,
+  [
+    deviceId,
+    nombre_variable,
+    valor_minimo,
+    valor_maximo,
+    sev,
+    esta_activa
+  ]
+);
 
-    // Traemos el registro final para responder al front
-    const [rows] = await pool.query(
-      `
-      SELECT
-        c.id_config_alarma,
-        c.nombre_variable,
-        c.valor_minimo,
-        c.valor_maximo,
-        c.nivel_severidad,
-        c.esta_activa,
-        c.fecha_creacion,
-        z.tipo AS tipo_zona
-      FROM configuraciones_alarmas c
-      JOIN dispositivos d ON c.id_dispositivo = d.id_dispositivo
-      JOIN zonas z ON d.id_zona = z.id_zona
-      WHERE c.id_dispositivo = ? AND c.nombre_variable = ?
-      LIMIT 1
-      `,
-      [deviceId, nombre_variable]
-    );
-
+// Traemos EXACTAMENTE la alarma recién creada
+const [rows] = await pool.query(
+  `
+  SELECT
+    c.id_config_alarma,
+    c.nombre_variable,
+    c.valor_minimo,
+    c.valor_maximo,
+    c.nivel_severidad,
+    c.esta_activa,
+    c.fecha_creacion,
+    z.tipo AS tipo_zona
+  FROM configuraciones_alarmas c
+  JOIN dispositivos d ON c.id_dispositivo = d.id_dispositivo
+  JOIN zonas z ON d.id_zona = z.id_zona
+  WHERE c.id_config_alarma = ?
+  `,
+  [result.insertId]
+);
     const r = rows[0];
     const parameterOut = DB_TO_PARAM[r.nombre_variable] ?? "CO2";
     const stationOut = zonaTipoToStation(r.tipo_zona);

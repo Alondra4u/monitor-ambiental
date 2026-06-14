@@ -100,8 +100,8 @@ const RANGE_OPTIONS: RangeOption[] = ["hour", "day", "week", "month"];
 const RANGE_LABELS: Record<RangeOption, string> = {
   hour: "Última hora",
   day: "Hoy",
-  week: "Últimos 7 días",
-  month: "Últimos 30 días",
+  week: "Últimos 7 días con registros",
+  month: "Últimos 15 días con registros",
 };
 
 /* ----------------- Normalización ----------------- */
@@ -135,68 +135,139 @@ const normalizeRegistro = (reg: Registro) => {
 };
 
 /* ----------------- Construcción de la comparativa ----------------- */
-
 const buildComparativeData = (
   registros: Registro[],
   range: RangeOption
 ): ComparativePoint[] => {
-  const map: Record<string, ComparativePoint> = {};
+  const map: Record<string, any> = {};
 
   registros.forEach((reg) => {
-    const { fecha, hora, estacion, co2, co, nox, voc } = normalizeRegistro(reg);
+    const { fecha, hora, estacion, co2, co, nox, voc } =
+      normalizeRegistro(reg);
 
     if (!fecha || !hora) return;
 
     const date = fecha.slice(0, 10);
-    const hhmm = hora.slice(0, 5); // "HH:MM"
+    const hhmm = hora.slice(0, 5);
 
-    // 🔹 Cómo se ve el eje X según el rango
     let timeKey: string;
+
     if (range === "hour") {
-      // Última hora → se ve "HH:MM"
       timeKey = hhmm;
     } else if (range === "day") {
-      // Hoy → agrupamos por hora: "HH:00"
-      const hh = hora.slice(0, 2);
-      timeKey = `${hh}:00`;
+      timeKey = `${hora.slice(0, 2)}:00`;
     } else {
-      // week / month → solo la fecha
-      timeKey = date;   // 👈 EJE X SOLO FECHA
+      timeKey = date;
     }
 
     if (!map[timeKey]) {
       map[timeKey] = {
         time: timeKey,
-        ruralCO2: 0,
-        urbanaCO2: 0,
-        ruralCO: 0,
-        urbanaCO: 0,
-        ruralNOx: 0,
-        urbanaNOx: 0,
-        ruralVOC: 0,
-        urbanaVOC: 0,
+
+        ruralCO2Sum: 0,
+        ruralCO2Count: 0,
+
+        urbanaCO2Sum: 0,
+        urbanaCO2Count: 0,
+
+        ruralCOSum: 0,
+        ruralCOCount: 0,
+
+        urbanaCOSum: 0,
+        urbanaCOCount: 0,
+
+        ruralNOxSum: 0,
+        ruralNOxCount: 0,
+
+        urbanaNOxSum: 0,
+        urbanaNOxCount: 0,
+
+        ruralVOCSum: 0,
+        ruralVOCCount: 0,
+
+        urbanaVOCSum: 0,
+        urbanaVOCCount: 0,
       };
     }
 
+    const row = map[timeKey];
     const estLower = estacion.toLowerCase();
 
     if (estLower.includes("rural")) {
-      map[timeKey].ruralCO2 = co2;
-      map[timeKey].ruralCO = co;
-      map[timeKey].ruralNOx = nox;
-      map[timeKey].ruralVOC = voc;
-    } else if (estLower.includes("urb")) {
-      map[timeKey].urbanaCO2 = co2;
-      map[timeKey].urbanaCO = co;
-      map[timeKey].urbanaNOx = nox;
-      map[timeKey].urbanaVOC = voc;
+      row.ruralCO2Sum += co2;
+      row.ruralCO2Count++;
+
+      row.ruralCOSum += co;
+      row.ruralCOCount++;
+
+      row.ruralNOxSum += nox;
+      row.ruralNOxCount++;
+
+      row.ruralVOCSum += voc;
+      row.ruralVOCCount++;
+    }
+
+    if (estLower.includes("urb")) {
+      row.urbanaCO2Sum += co2;
+      row.urbanaCO2Count++;
+
+      row.urbanaCOSum += co;
+      row.urbanaCOCount++;
+
+      row.urbanaNOxSum += nox;
+      row.urbanaNOxCount++;
+
+      row.urbanaVOCSum += voc;
+      row.urbanaVOCCount++;
     }
   });
 
-  return Object.values(map).sort((a, b) => a.time.localeCompare(b.time));
-  console.log("MAPA FINAL", map);
-};
+  return Object.values(map)
+    .map((r) => ({
+      time: r.time,
 
+      ruralCO2:
+        r.ruralCO2Count > 0
+          ? Number((r.ruralCO2Sum / r.ruralCO2Count).toFixed(2))
+          : 0,
+
+      urbanaCO2:
+        r.urbanaCO2Count > 0
+          ? Number((r.urbanaCO2Sum / r.urbanaCO2Count).toFixed(2))
+          : 0,
+
+      ruralCO:
+        r.ruralCOCount > 0
+          ? Number((r.ruralCOSum / r.ruralCOCount).toFixed(2))
+          : 0,
+
+      urbanaCO:
+        r.urbanaCOCount > 0
+          ? Number((r.urbanaCOSum / r.urbanaCOCount).toFixed(2))
+          : 0,
+
+      ruralNOx:
+        r.ruralNOxCount > 0
+          ? Number((r.ruralNOxSum / r.ruralNOxCount).toFixed(2))
+          : 0,
+
+      urbanaNOx:
+        r.urbanaNOxCount > 0
+          ? Number((r.urbanaNOxSum / r.urbanaNOxCount).toFixed(2))
+          : 0,
+
+      ruralVOC:
+        r.ruralVOCCount > 0
+          ? Number((r.ruralVOCSum / r.ruralVOCCount).toFixed(2))
+          : 0,
+
+      urbanaVOC:
+        r.urbanaVOCCount > 0
+          ? Number((r.urbanaVOCSum / r.urbanaVOCCount).toFixed(2))
+          : 0,
+    }))
+    .sort((a, b) => a.time.localeCompare(b.time));
+};
 
 /* ----------------- Componente ----------------- */
 
@@ -222,7 +293,20 @@ const Comparativa: React.FC = () => {
         if (!res.ok) throw new Error("Error al obtener datos de la API");
 
         const json = await res.json();
-        console.log("API comparativa rawData:", json); // 👀 revisa esto en consola
+        console.log(
+  "RURALES:",
+  json.filter((r: any) =>
+    (r.estacion || "").toLowerCase().includes("rural")
+  ).length
+);
+
+console.log(
+  "URBANAS:",
+  json.filter((r: any) =>
+    (r.estacion || "").toLowerCase().includes("urb")
+  ).length
+);
+       
         setRawData(json);
       } catch (err) {
         console.error(err);

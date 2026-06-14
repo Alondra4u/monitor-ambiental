@@ -115,7 +115,6 @@ app.get("/api/mediciones", async (req, res) => {
 });
 
 
-// Crear nueva medición (endpoint para que los dispositivos envíen datos)
 
 // Crear nueva medición (endpoint para que los dispositivos envíen datos)
 
@@ -143,10 +142,6 @@ app.post("/api/mediciones", async (req, res) => {
       hour12: false
     });
 
-    console.log("================================");
-    console.log("Fecha generada:", fecha_medicion);
-    console.log("Hora generada :", hora_medicion);
-    console.log("================================");
 
     const [result] = await pool.query(
       `
@@ -223,35 +218,59 @@ app.get("/api/mediciones/hoy", async (req, res) => {
   }
 });
 
-// RUTA: ÚLTIMOS 7 DÍAS
+// RUTA: ÚLTIMOS 7 DÍAS CON DATOS
 app.get("/api/mediciones/ultimos7dias", async (req, res) => {
   try {
+
     const [rows] = await pool.query(`
       ${baseSelect}
-      WHERE m.fecha_medicion >= CURDATE() - INTERVAL 7 DAY
+      WHERE m.fecha_medicion IN (
+        SELECT fecha_medicion
+        FROM (
+          SELECT DISTINCT fecha_medicion
+          FROM mediciones
+          ORDER BY fecha_medicion DESC
+          LIMIT 7
+        ) ultimos_dias
+      )
       ORDER BY m.fecha_medicion DESC, m.hora_medicion DESC;
     `);
 
     res.json(rows);
+
   } catch (error) {
     console.error("Error obteniendo últimos 7 días:", error);
-    res.status(500).json({ error: "Error al obtener datos de los últimos 7 días." });
+    res.status(500).json({
+      error: "Error al obtener datos."
+    });
   }
 });
 
-// RUTA: ÚLTIMOS 30 DÍAS
+// ultimos 30 días con datos
 app.get("/api/mediciones/ultimos30dias", async (req, res) => {
   try {
+
     const [rows] = await pool.query(`
       ${baseSelect}
-      WHERE m.fecha_medicion >= CURDATE() - INTERVAL 30 DAY
+      WHERE m.fecha_medicion IN (
+        SELECT fecha_medicion
+        FROM (
+          SELECT DISTINCT fecha_medicion
+          FROM mediciones
+          ORDER BY fecha_medicion DESC
+          LIMIT 15
+        ) ultimos_dias
+      )
       ORDER BY m.fecha_medicion DESC, m.hora_medicion DESC;
     `);
 
     res.json(rows);
+
   } catch (error) {
     console.error("Error obteniendo últimos 30 días:", error);
-    res.status(500).json({ error: "Error al obtener datos de los últimos 30 días." });
+    res.status(500).json({
+      error: "Error al obtener datos."
+    });
   }
 });
 
